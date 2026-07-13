@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>¿Quién de nosotras...? 🍷</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Titan+One&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --noche:#23092b;
+    --noche2:#3a0f45;
+    --rosa:#ff3d8a;
+    --amarillo:#ffd23f;
+    --menta:#4de8c2;
+    --lila:#f3e5ff;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:'Outfit',sans-serif;
+    background:radial-gradient(circle at 20% 10%, #4a1257 0%, var(--noche) 55%),var(--noche);
+    color:var(--lila);
+    min-height:100vh;
+    display:flex;justify-content:center;
+    overflow-x:hidden;
+  }
+  .app{width:100%;max-width:480px;padding:24px 20px 40px;position:relative}
+  h1{
+    font-family:'Titan One',cursive;
+    font-size:clamp(2rem,9vw,2.8rem);
+    line-height:1.05;
+    color:var(--amarillo);
+    text-shadow:4px 4px 0 var(--rosa);
+    transform:rotate(-2deg);
+    margin-bottom:6px;
+  }
+  .sub{font-weight:600;color:var(--menta);margin-bottom:24px;font-size:1.05rem}
+  .pantalla{display:none;animation:pop .35s ease}
+  .pantalla.activa{display:block}
+  @keyframes pop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+
+  /* ------ botones ------ */
+  .btn{
+    display:block;width:100%;
+    font-family:'Titan One',cursive;
+    font-size:1.25rem;
+    padding:16px;
+    border:none;border-radius:18px;
+    background:var(--rosa);color:#fff;
+    cursor:pointer;
+    box-shadow:0 6px 0 #b1205f;
+    transition:transform .08s, box-shadow .08s;
+    margin-top:14px;
+    letter-spacing:.5px;
+  }
+  .btn:active{transform:translateY(4px);box-shadow:0 2px 0 #b1205f}
+  .btn.sec{background:var(--noche2);color:var(--menta);box-shadow:0 6px 0 #14051a;font-size:1rem}
+  .btn.amarillo{background:var(--amarillo);color:var(--noche);box-shadow:0 6px 0 #b8912a}
+  .btn:focus-visible{outline:3px solid var(--menta);outline-offset:3px}
+
+  /* ------ jugadoras ------ */
+  .fila-input{display:flex;gap:10px;margin-bottom:12px}
+  input[type=text]{
+    flex:1;padding:14px 16px;border-radius:14px;border:3px solid var(--noche2);
+    background:#fff;color:var(--noche);font-family:'Outfit';font-weight:600;font-size:1rem;
+  }
+  input[type=text]:focus{outline:none;border-color:var(--rosa)}
+  .btn-mini{
+    font-family:'Titan One';font-size:1.4rem;width:56px;border:none;border-radius:14px;
+    background:var(--menta);color:var(--noche);cursor:pointer;box-shadow:0 4px 0 #2a9e81;
+  }
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 6px}
+  .chip{
+    background:var(--noche2);border:2px solid var(--rosa);border-radius:999px;
+    padding:8px 14px;font-weight:600;display:flex;align-items:center;gap:8px;
+    animation:pop .25s ease;
+  }
+  .chip button{background:none;border:none;color:var(--amarillo);font-size:1rem;cursor:pointer;font-weight:800}
+
+  /* ------ niveles ------ */
+  .nivel{
+    width:100%;text-align:left;margin-top:14px;padding:18px;border-radius:18px;
+    border:3px solid transparent;background:var(--noche2);color:var(--lila);
+    cursor:pointer;font-family:'Outfit';transition:transform .1s;
+  }
+  .nivel:active{transform:scale(.97)}
+  .nivel .t{font-family:'Titan One';font-size:1.3rem;display:block;margin-bottom:4px}
+  .nivel.suave .t{color:var(--menta)}
+  .nivel.picante .t{color:var(--amarillo)}
+  .nivel.fuego .t{color:var(--rosa)}
+  .nivel small{opacity:.85}
+
+  /* ------ carta ------ */
+  .carta{
+    background:linear-gradient(160deg,#fff 0%,#ffe9f3 100%);
+    color:var(--noche);
+    border-radius:26px;
+    padding:38px 26px;
+    min-height:240px;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    font-size:1.45rem;font-weight:800;line-height:1.35;
+    box-shadow:0 12px 0 rgba(255,61,138,.45), 0 20px 40px rgba(0,0,0,.4);
+    transform:rotate(-1.5deg);
+    animation:cartaIn .4s cubic-bezier(.2,1.4,.4,1);
+    margin:18px 0 6px;
+    position:relative;
+  }
+  @keyframes cartaIn{from{opacity:0;transform:rotate(-8deg) translateY(30px) scale(.9)}to{opacity:1;transform:rotate(-1.5deg) translateY(0) scale(1)}}
+  .carta::before{content:attr(data-emoji);position:absolute;top:-18px;left:18px;font-size:2.2rem;transform:rotate(-12deg)}
+  .contador-cartas{font-size:.85rem;color:var(--menta);font-weight:600;text-align:right}
+
+  /* ------ cuenta atrás ------ */
+  .overlay{
+    position:fixed;inset:0;background:rgba(20,4,26,.93);
+    display:none;align-items:center;justify-content:center;flex-direction:column;z-index:50;
+  }
+  .overlay.on{display:flex}
+  .num{
+    font-family:'Titan One';font-size:9rem;color:var(--amarillo);
+    text-shadow:6px 6px 0 var(--rosa);
+    animation:numPop .8s ease;
+  }
+  .num.senala{font-size:3.2rem;color:var(--rosa);text-shadow:5px 5px 0 var(--amarillo);animation:shake .5s ease}
+  @keyframes numPop{0%{transform:scale(2);opacity:0}30%{transform:scale(1);opacity:1}100%{opacity:1}}
+  @keyframes shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-6deg) scale(1.15)}40%{transform:rotate(6deg) scale(1.15)}60%{transform:rotate(-4deg)}80%{transform:rotate(4deg)}}
+
+  /* ------ señalada ------ */
+  .grid-nombres{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .btn-nombre{
+    font-family:'Titan One';font-size:1.05rem;padding:16px 8px;border:none;border-radius:16px;
+    background:var(--noche2);color:var(--amarillo);cursor:pointer;box-shadow:0 4px 0 #14051a;
+  }
+  .btn-nombre:active{transform:translateY(3px);box-shadow:0 1px 0 #14051a}
+
+  .prenda-caja{
+    background:var(--noche2);border:3px dashed var(--amarillo);border-radius:20px;
+    padding:22px;margin-top:16px;text-align:center;font-size:1.15rem;font-weight:600;
+    animation:pop .3s ease;
+  }
+  .prenda-caja .quien{font-family:'Titan One';color:var(--rosa);font-size:1.5rem;display:block;margin-bottom:8px}
+
+  /* ------ ranking ------ */
+  .rank{list-style:none;margin-top:16px}
+  .rank li{
+    display:flex;justify-content:space-between;align-items:center;
+    background:var(--noche2);border-radius:14px;padding:14px 18px;margin-bottom:10px;
+    font-weight:600;font-size:1.1rem;animation:pop .3s ease;
+  }
+  .rank li:first-child{border:3px solid var(--amarillo);background:#4a1257}
+  .rank .pts{font-family:'Titan One';color:var(--menta)}
+  .corona{font-size:1.4rem;margin-right:6px}
+
+  /* ------ reto viral ------ */
+  .prenda-caja.viral{
+    border:3px solid var(--amarillo);
+    background:linear-gradient(160deg,#4a1257,#2b0a2e);
+    box-shadow:0 0 24px rgba(255,210,63,.35);
+  }
+  .prenda-caja.viral .quien{color:var(--amarillo)}
+  .badge-viral{
+    display:inline-block;font-family:'Titan One';font-size:.85rem;
+    background:var(--amarillo);color:var(--noche);border-radius:999px;
+    padding:4px 14px;margin-bottom:10px;transform:rotate(-2deg);
+    animation:shake .6s ease;
+  }
+  .btns-rrss{display:flex;gap:10px;margin-top:14px}
+  .btn-rrss{
+    flex:1;font-family:'Titan One';font-size:.95rem;padding:12px;border:none;border-radius:14px;
+    cursor:pointer;color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.35);
+  }
+  .btn-rrss.ig{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
+  .btn-rrss.share{background:var(--menta);color:var(--noche)}
+  .btn-rrss:active{transform:translateY(3px)}
+  .hashtag-copy{
+    margin-top:12px;background:#14051a;border-radius:12px;padding:10px 14px;
+    font-weight:800;color:var(--menta);cursor:pointer;font-size:1rem;
+    border:2px dashed var(--menta);
+  }
+  .pie{margin-top:26px;text-align:center;font-size:.85rem;opacity:.8}
+  .pie a{color:var(--amarillo);font-weight:800;text-decoration:none}
+
+  .crono{
+    font-family:'Titan One';font-size:3.2rem;color:var(--amarillo);
+    text-shadow:3px 3px 0 var(--rosa);margin-top:10px;min-height:0;
+  }
+  .crono.fin{color:var(--rosa);font-size:1.6rem;animation:shake .5s ease}
+  .veredicto{
+    margin-top:14px;font-family:'Titan One';font-size:1.15rem;
+    color:var(--amarillo);animation:pop .3s ease;
+  }
+
+  /* ------ álbum ------ */
+  .btn-album{
+    position:fixed;bottom:18px;right:18px;z-index:40;
+    width:58px;height:58px;border-radius:50%;border:none;
+    background:var(--amarillo);font-size:1.6rem;cursor:pointer;
+    box-shadow:0 5px 0 #b8912a, 0 8px 20px rgba(0,0,0,.4);
+    display:none;
+  }
+  .btn-album:active{transform:translateY(3px)}
+  .grid-fotos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+  .grid-fotos .foto{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;border:2px solid var(--rosa);animation:pop .25s ease}
+  .grid-fotos img{width:100%;height:100%;object-fit:cover;display:block}
+  .foto button{
+    position:absolute;top:4px;right:4px;width:26px;height:26px;border:none;border-radius:50%;
+    background:rgba(20,4,26,.85);color:var(--amarillo);font-weight:800;cursor:pointer;font-size:.85rem;
+  }
+  #collage-prev{width:100%;border-radius:16px;margin-top:14px;border:3px solid var(--amarillo);display:none}
+  .nota-privacidad{font-size:.8rem;opacity:.7;margin-top:10px;text-align:center}
+
+  /* ------ confetti ------ */
+  .confeti{position:fixed;top:-20px;font-size:1.5rem;z-index:60;animation:caer linear forwards;pointer-events:none}
+  @keyframes caer{to{transform:translateY(110vh) rotate(720deg)}}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- PANTALLA 1: jugadoras -->
+  <section class="pantalla activa" id="p-inicio">
+    <h1>¿Quién de<br>nosotras...?</h1>
+    <p class="sub">El juego oficial de las noches que acaban en "no se lo cuentes a nadie" 🤫</p>
+    <div class="fila-input">
+      <input type="text" id="nombre" placeholder="Nombre de la jugadora" maxlength="14" autocomplete="off">
+      <button class="btn-mini" id="add" aria-label="Añadir jugadora">+</button>
+    </div>
+    <div class="chips" id="chips"></div>
+    <button class="btn" id="ir-nivel" disabled style="opacity:.5">Necesito al menos 3 valientes</button>
+  </section>
+
+  <!-- PANTALLA 2: nivel -->
+  <section class="pantalla" id="p-nivel">
+    <h1>Nivel de<br>cachondeo</h1>
+    <p class="sub">Elegid con cabeza... o sin ella 😈</p>
+    <button class="nivel suave" data-nivel="suave"><span class="t">🍼 Modo suave</span><small>Risas garantizadas, dignidad intacta (de momento)</small></button>
+    <button class="nivel picante" data-nivel="picante"><span class="t">🍷 Modo picante</span><small>Aquí ya empiezan a salir trapos sucios</small></button>
+    <button class="nivel fuego" data-nivel="fuego"><span class="t">🔥 Sin filtro</span><small>Lo que pasa en esta habitación, se queda en esta habitación</small></button>
+  </section>
+
+  <!-- PANTALLA 3: carta -->
+  <section class="pantalla" id="p-juego">
+    <h1>¿Quién de<br>nosotras...?</h1>
+    <div class="contador-cartas" id="cnt"></div>
+    <div class="carta" id="carta" data-emoji="🍷"></div>
+    <button class="btn amarillo" id="btn-senalar">1, 2, 3... ¡SEÑALAD! 👉</button>
+    <button class="btn sec" id="btn-saltar">Pasar carta (cobardes) 🙄</button>
+  </section>
+
+  <!-- PANTALLA 4: quién fue -->
+  <section class="pantalla" id="p-quien">
+    <h1>¿A quién han<br>pillado? 👀</h1>
+    <p class="sub">Tocad el nombre de la más señalada</p>
+    <div class="grid-nombres" id="grid-nombres"></div>
+    <button class="btn sec" id="empate">Empate / todas inocentes (ja) 😇</button>
+  </section>
+
+  <!-- PANTALLA 5: prenda -->
+  <section class="pantalla" id="p-prenda">
+    <h1>¡Sentencia! ⚖️</h1>
+    <div class="prenda-caja" id="prenda"></div>
+    <button class="btn" id="btn-siguiente">Siguiente carta ➡️</button>
+    <button class="btn sec" id="btn-final">Terminar y ver ranking 🏆</button>
+  </section>
+
+  <!-- PANTALLA 6: ranking -->
+  <section class="pantalla" id="p-final">
+    <h1>La más<br>pillada 🏆</h1>
+    <p class="sub">El pueblo ha hablado. No hay apelación posible.</p>
+    <ol class="rank" id="rank"></ol>
+    <div id="premios"></div>
+    <button class="btn amarillo" id="btn-podio">📲 Compartir el podio en stories</button>
+    <button class="btn sec" id="btn-ir-album">📸 Álbum de la noche</button>
+    <button class="btn" id="btn-otra">Otra ronda 🔁</button>
+    <p class="pie">Un juego de <a href="#" id="link-marca" target="_blank"></a> · etiquetadnos y os compartimos 💛</p>
+  </section>
+
+  <!-- PANTALLA 7: álbum -->
+  <section class="pantalla" id="p-album">
+    <h1>Álbum de<br>la noche 📸</h1>
+    <p class="sub">Guardad el recuerdo... y presumid con el hashtag</p>
+    <input type="file" id="input-fotos" accept="image/*" multiple hidden>
+    <button class="btn amarillo" id="btn-add-fotos">📷 Añadir fotos (máx. 9)</button>
+    <div class="grid-fotos" id="grid-fotos"></div>
+    <button class="btn" id="btn-collage">✨ Crear collage con hashtag</button>
+    <img id="collage-prev" alt="Collage de la noche">
+    <button class="btn amarillo" id="btn-share-collage" style="display:none">📲 Compartir / guardar collage</button>
+    <div class="hashtag-copy" id="tag-album" onclick="copiarTag(this)"></div>
+    <p class="pie">Subid las fotos con el hashtag y <strong>buscadlo en Instagram</strong> para ver a otros grupos jugando 👀</p>
+    <p class="nota-privacidad">🔒 Las fotos no se suben a ningún sitio: se quedan en vuestro móvil hasta que VOSOTRAS las compartáis.</p>
+    <button class="btn sec" id="btn-volver-album">⬅️ Volver al juego</button>
+  </section>
+</div>
+
+<button class="btn-album" id="abrir-album" aria-label="Abrir álbum de fotos">📸</button>
+
+<!-- overlay cuenta atrás -->
+<div class="overlay" id="overlay"><div class="num" id="num">3</div></div>
+
+<script>
+/* ============================================================
+   CONFIGURACIÓN DE MARCA — edita estas 4 líneas con tus datos
+   ============================================================ */
+const MARCA = {
+  cuenta: "@tumarca",                 // tu cuenta de Instagram/TikTok
+  hashtag: "#QuienDeNosotras",        // hashtag oficial del juego
+  urlWeb: "https://tumarca.com",      // tu web (tienda, landing, linktree...)
+  urlIG: "https://instagram.com/tumarca"
+};
+const FRECUENCIA_VIRAL = 3; // cada cuántas pilladas salta un Reto Viral
+
+const PREGUNTAS = {
+  suave: [
+    "...manda audios de 5 minutos para decir algo de 10 segundos?",
+    "...le habla al robot aspirador, a las plantas o al coche?",
+    "...dice 'ya voy saliendo' desde el sofá y en pijama?",
+    "...tiene 47.000 fotos en el móvil y no borra ninguna?",
+    "...se sabe la vida entera de gente que no conoce por Instagram?",
+    "...llora con los anuncios de la lotería de Navidad?",
+    "...pide 'para compartir' y luego defiende su plato con el tenedor?",
+    "...tiene el bolso más caótico que su vida sentimental?",
+    "...dice 'un capítulo más' y amanece con la serie terminada?",
+    "...saluda a los perros por la calle pero no a los dueños?",
+    "...se pierde con el GPS puesto?",
+    "...guarda ropa 'por si adelgazo' desde 2015?",
+    "...manda memes a las 2 de la mañana como si fuera urgente?",
+    "...tiene modo señora activado desde los 25?",
+    "...se hace la sorprendida cuando le cuentan un cotilleo que ya sabía?",
+    "...dice 'no tengo hambre' y se come la mitad de tu plato?",
+    "...planea el viaje entero y luego no reserva nada?",
+    "...cancela planes y luego sube stories desde el sofá?",
+    "...contesta 'jajaja' con cara de piedra total?",
+    "...tiene 200 pestañas abiertas en el móvil 'por si acaso'?",
+    "...imita las manías de su pareja (o de su madre) cuando no están delante?",
+    "...se inventa palabras y las defiende como si vinieran en el diccionario?"
+  ],
+  picante: [
+    "...ha stalkeado a un ex (o a su nueva pareja) a las 3 de la mañana?",
+    "...fingiría una llamada urgente para escapar de una cita horrible?",
+    "...ha dicho 'solo una copa' y ha vuelto a las 6 de la mañana?",
+    "...se ha reído en un momento totalmente inapropiado?",
+    "...ha mandado un mensaje al chat equivocado y ha querido morirse?",
+    "...ha vuelto con un ex sabiendo perfectamente que era mala idea?",
+    "...ha mentido sobre su edad, altura o aficiones en una app de citas?",
+    "...ha fingido que le gustaba un regalo horroroso con cara de póker?",
+    "...tiene un ex del que nunca habla... por algo será?",
+    "...ha llorado en el baño de una discoteca (y otra la ha consolado)?",
+    "...ha dicho 'no me gusta nadie' mientras miraba el móvil sonriendo?",
+    "...se ha inventado una excusa médica para no ir a trabajar?",
+    "...ha criticado a alguien y esa persona estaba justo detrás?",
+    "...besaría al ex de una amiga si hubiera 'permiso oficial'?",
+    "...ha espiado el móvil de una pareja alguna vez?",
+    "...ha dicho 'te llamo luego' sin ninguna intención de llamar?",
+    "...tiene guardado el contacto de alguien como 'NO CONTESTAR'?",
+    "...se ha ido de una fiesta sin despedirse de nadie?",
+    "...ha usado a una amiga de excusa sin avisarla antes?",
+    "...ha vuelto a leer conversaciones antiguas de un ex 'por nostalgia'?",
+    "...tiene una manía de su pareja que NO soporta y jamás se lo ha dicho?",
+    "...ha dicho 'no me pasa nada' a su pareja echando humo por dentro?",
+    "...critica a la pareja de una amiga... solo cuando la amiga no está delante?"
+  ],
+  fuego: [
+    "...tiene una historia de una noche que solo saben dos personas... y una está aquí?",
+    "...ha mentido a las presentes en algo y todavía no lo ha confesado?",
+    "...ha tenido un rollo del que se arrepiente PROFUNDAMENTE?",
+    "...ha fingido más de una vez... y no hablamos de sorpresa en cumpleaños?",
+    "...enviaría un mensaje peligroso esta misma noche si la dejamos con el móvil?",
+    "...ha tenido un crush con alguien totalmente prohibido (jefe, profe, cuñado...)?",
+    "...tiene fotos en el móvil que formatearía antes de enseñar?",
+    "...ha salido con dos personas a la vez aunque sea un poquito?",
+    "...ha dado un teléfono falso con toda la cara del mundo?",
+    "...ha dicho 'te quiero' sin sentirlo ni un poco?",
+    "...se ha escapado de casa de alguien antes de que se despertara?",
+    "...ha tenido un sueño subido de tono con alguien de este grupo? 😳",
+    "...sabe un secreto de una de las presentes que le encantaría soltar YA?",
+    "...ha hecho la 'técnica del avión' (desaparecer del mapa) a alguien?",
+    "...ha ligado descaradamente para conseguir algo gratis?",
+    "...volvería esta noche con su peor ex si le escribiera 'hola, ¿qué tal?'?",
+    "...ha mentido en este juego hace menos de 10 minutos?",
+    "...tiene un 'plan B' guardado en el móvil por si lo de ahora falla?",
+    "...ha hecho algo en una despedida de soltera que jamás contará?",
+    "...ha buscado su propio nombre en Google más de una vez este mes?",
+    "...cambiaría algo MUY concreto de su pareja si pudiera hacerlo sin consecuencias?",
+    "...le ha contado a este grupo cosas de su pareja que su pareja jamás perdonaría?",
+    "...tiene más confianza con su persona de confianza que con su propia pareja?"
+  ]
+};
+
+const PRENDAS = [
+  "Confiesa la anécdota completa. CON detalles. Sin resumir. 🎤",
+  "Enseña la última foto de tu galería. Sin tocar nada antes. 📱",
+  "Deja que la de tu derecha escriba un story con tu móvil. 😈",
+  "Imita a una de las presentes hasta que adivinen quién es. 🎭",
+  "Cuenta tu peor cita en 30 segundos. Cronometramos. ⏱️",
+  "Enseña tu historial de búsqueda de hoy. Sí, el de hoy. 🔍",
+  "Habla con acento andaluz cerrado hasta tu próximo turno. 🗣️",
+  "Di algo bonito de cada una... y algo 'mejorable' de ti misma. 💅",
+  "Lee en voz alta tu último audio enviado. El que sea. 🔊",
+  "Baila 15 segundos sin música. En completo silencio. 💃",
+  "Deja que el grupo elija tu foto de perfil de WhatsApp 24 horas. 🖼️",
+  "Cuenta el secreto más tonto que guardas. El tonto, no EL secreto. 🤐",
+  "Bebe un sorbo (o come algo picante, versión sobria). 🌶️",
+  "Manda '¿estás despierto/a?' al 5º contacto de tu WhatsApp. 📨",
+  "Confiesa cuál fue tu último stalkeo y a quién. 🕵️‍♀️",
+  "Haz tu mejor cara de 'me encanta el regalo' durante 10 segundos. 🎁",
+  "Nombra a tus 3 crushes de la adolescencia. Los vergonzosos. 💘",
+  "Deja tu móvil boca arriba en el centro hasta la próxima ronda. 😱",
+  "Cuenta la mentira más gorda que has dicho para librarte de un plan. 🤥",
+  "Declama tu excusa favorita como si fuera un monólogo de teatro. 🎭"
+];
+
+const RETOS_VIRALES = [
+  "Grabaos TODAS haciendo vuestra mejor cara de '¿quién, yo? 😇' y subidlo a stories.",
+  "Story de la señalada cumpliendo su prenda (con su permiso, que luego vienen los llantos). 📹",
+  "Boomerang del grupo brindando + encuesta en stories: '¿Quién creéis que es la más liante?'",
+  "La señalada graba un story diciendo: 'Confirmo que mis amigas me conocen DEMASIADO bien.'",
+  "Foto grupal señalándoos todas entre vosotras a la vez. Caos garantizado. 👉👈",
+  "Story con la pregunta de esta ronda escrita y encuesta para que vuestros seguidores voten.",
+  "Vídeo de 10 segundos recreando la anécdota confesada (versión apta para redes 😅).",
+  "La ganadora del momento hace un 'discurso de agradecimiento' de premio. En story. Con lágrima falsa.",
+  "Subid un story retando a otro grupo de amigas a jugar. Etiquetadlas. Sin piedad. 😈",
+  "Selfie grupal con vuestra peor cara. La que salga mejor, pierde y sube otra."
+];
+
+const pick = a => a[Math.floor(Math.random()*a.length)];
+
+const TRABALENGUAS = [
+  "Toco tu trozo, trozo que toco; si toco tu trozo, ¡qué trozo toco!",
+  "El pecho de Pancha plancha; plancha Pancha su pecho ancho.",
+  "Me lo dio dudando, dudando me lo dio; si me lo da sin dudar, sin dudar me lo quedo yo.",
+  "Beso a beso besé al bobo, y el bobo bobamente me besó.",
+  "Agarra la jarra, Sara, que si Sara no agarra la jarra, la jarra agarra a Sara.",
+  "Si Paco pica poco pico, ¿qué poco pico pica Paco?"
+];
+
+const MISIONES = [
+  "Llama a un contacto (lo elige la de tu izquierda), preséntate con nombre falso y profesión absurda ('Hola, soy Vanesa, domadora de cabras premiada') y aguanta 20 segundos sin reírte. 📞",
+  "Manda un audio a tu madre o a tu pareja diciendo con total seriedad: 'Luego te cuento una cosa'. Y no des NINGUNA explicación hasta mañana. 😈",
+  "Si estáis en un bar: preséntate a alguien y dile que sois el club de lectura 'Las Ilustradas' y pídele que os recomiende un libro. Si estáis en casa: llama a una amiga que no esté aquí y preséntate como su nueva vecina. 🏠",
+  "Escribe a un contacto (lo elige el grupo) SOLO la palabra 'ok.' Con punto. Y no contestes nada más en 10 minutos. 💀",
+  "Llama a una amiga que no haya venido y dile muy seria: 'Tenemos que hablar de lo que hiciste'. Aguanta 15 segundos antes de confesar que es un juego. 😇"
+];
+
+const PAREJA_PRENDAS = [
+  "Confiesa UNA manía de tu pareja (o de tu persona de más confianza) que no soportas y que jamás le has dicho a la cara. El grupo dictamina: ¿es para tanto o exageras? 💑",
+  "Imita a tu pareja o persona de confianza en su momento MÁS insoportable. Las demás tienen que adivinar la situación. 🎭",
+  "Di la frase que más repite tu pareja/mejor amiga y que te saca de quicio. Con su tono. Con su cara. Sin piedad. 🗣️",
+  "Cuenta la discusión más ABSURDA que has tenido con tu pareja o persona de confianza. Ridículo garantizado. 🤦‍♀️"
+];
+
+const ESPECIALES = [
+  {id:"trab", badge:"🌀 TRABALENGUAS PICANTE", texto:()=>`Dilo 3 veces seguidas, rápido y sin reírte:<br><br><em>«${pick(TRABALENGUAS)}»</em><br><br>Si fallas o te ríes: sorbo y vuelta a empezar.`},
+  {id:"taco", badge:"🤬 TACO INVENTADO", texto:()=>"Invéntate un taco NUEVO que no exista, define su significado como si fueras de la RAE y úsalo en una frase muy indignada. Queda oficialmente adoptado: TODAS debéis usarlo el resto de la noche."},
+  {id:"trola", badge:"🎭 ¿VERDAD O TROLA?", texto:()=>"Cuenta una confesión escandalosa: puede ser 100% real o completamente inventada. Las demás votan. Si te pillan la trola, bebes tú; si las engañas a todas... beben ellas. 😏"},
+  {id:"mision", badge:"📞 MISIÓN EXTERIOR", texto:()=>pick(MISIONES)},
+  {id:"pareja", badge:"💑 ZONA PAREJA", texto:()=>pick(PAREJA_PRENDAS)}
+];
+
+const RECOMPENSAS = [
+  "😇 Corona de Santa: puedes mandar UNA prenda extra a quien tú quieras. Ahora mismo. Úsala con maldad.",
+  "🍹 Te rellenan la copa (o te sirven el postre) el resto de la noche. Sin rechistar.",
+  "🎵 Eliges la música durante la próxima hora. Poder absoluto e incuestionable.",
+  "🛡️ Tienes UN veto para la próxima ronda: di 'VETO' y esa carta desaparece."
+];
+
+const CASTIGOS_FINALES = [
+  "👑 Corona de la Vergüenza: story coronándote como 'La más pillada de la noche'. Es la tradición.",
+  "🧹 Camarera oficial del grupo durante 15 minutos. Se aceptan propinas en cotilleos.",
+  "📱 Las demás eligen la foto del grupo de WhatsApp durante 48 horas.",
+  "🎤 LA confesión final: cuenta la anécdota que llevas toda la noche esquivando. Lo sabemos."
+];
+
+const EMOJIS = ["🍷","💅","👠","😈","💃","🍸","🔥","👀","💋","🎉","🤫","😂"];
+
+let jugadoras = [];
+let mazo = [];
+let idx = 0;
+let puntos = {};
+let trolas = {};
+let nivelActual = "suave";
+
+const $ = id => document.getElementById(id);
+const pantallas = document.querySelectorAll(".pantalla");
+function ir(id){ pantallas.forEach(p=>p.classList.remove("activa")); $(id).classList.add("activa"); window.scrollTo(0,0); }
+function barajar(a){ return a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]); }
+
+/* --- jugadoras --- */
+function pintarChips(){
+  $("chips").innerHTML = jugadoras.map((j,i)=>
+    `<span class="chip">💄 ${j}<button aria-label="Quitar a ${j}" onclick="quitar(${i})">✕</button></span>`).join("");
+  const ok = jugadoras.length >= 3;
+  const b = $("ir-nivel");
+  b.disabled = !ok;
+  b.style.opacity = ok ? 1 : .5;
+  b.textContent = ok ? `¡A jugar! (${jugadoras.length} valientes) 🎉` : "Necesito al menos 3 valientes";
+}
+function quitar(i){ jugadoras.splice(i,1); pintarChips(); }
+window.quitar = quitar;
+
+$("add").onclick = () => {
+  const v = $("nombre").value.trim();
+  if(!v) return;
+  if(jugadoras.length >= 12) return alert("¡12 como máximo, que esto no es una boda!");
+  if(jugadoras.some(j=>j.toLowerCase()===v.toLowerCase())) return alert("Esa ya está apuntada, guapa 😄");
+  jugadoras.push(v);
+  $("nombre").value = "";
+  $("nombre").focus();
+  pintarChips();
+};
+$("nombre").addEventListener("keydown", e => { if(e.key==="Enter") $("add").click(); });
+$("ir-nivel").onclick = () => ir("p-nivel");
+
+/* --- nivel --- */
+document.querySelectorAll(".nivel").forEach(b => b.onclick = () => {
+  nivelActual = b.dataset.nivel;
+  mazo = barajar(PREGUNTAS[nivelActual]);
+  idx = 0;
+  puntos = {};
+  trolas = {};
+  jugadoras.forEach(j => { puntos[j]=0; trolas[j]=0; });
+  siguienteCarta();
+  $("abrir-album").style.display = "block";
+  ir("p-juego");
+});
+
+/* --- carta --- */
+function siguienteCarta(){
+  if(idx >= mazo.length){ mazo = barajar(PREGUNTAS[nivelActual]); idx = 0; }
+  const c = $("carta");
+  c.textContent = "¿Quién de nosotras " + mazo[idx].replace("...","");
+  c.dataset.emoji = EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+  c.style.animation = "none"; void c.offsetWidth; c.style.animation = "";
+  $("cnt").textContent = `Carta ${idx+1} · nivel ${nivelActual==="fuego"?"🔥 sin filtro":nivelActual==="picante"?"🍷 picante":"🍼 suave"}`;
+  idx++;
+}
+$("btn-saltar").onclick = siguienteCarta;
+
+/* --- cuenta atrás --- */
+$("btn-senalar").onclick = () => {
+  const ov = $("overlay"), n = $("num");
+  ov.classList.add("on");
+  const pasos = ["3","2","1","👉 ¡SEÑALAD YA! 👈"];
+  let i = 0;
+  const tick = () => {
+    n.textContent = pasos[i];
+    n.className = i===3 ? "num senala" : "num";
+    n.style.animation="none"; void n.offsetWidth; n.style.animation="";
+    i++;
+    if(i < pasos.length) setTimeout(tick, 900);
+    else setTimeout(()=>{ ov.classList.remove("on"); pintarNombres(); ir("p-quien"); }, 1600);
+  };
+  tick();
+};
+
+/* --- señalada --- */
+function pintarNombres(){
+  $("grid-nombres").innerHTML = jugadoras.map(j =>
+    `<button class="btn-nombre" onclick="pillada('${j.replace(/'/g,"\\'")}')">${j}</button>`).join("");
+}
+let contadorPilladas = 0;
+
+function pillada(nombre){
+  puntos[nombre]++;
+  contadorPilladas++;
+  confeti();
+  const caja = $("prenda");
+  const esViral = contadorPilladas % FRECUENCIA_VIRAL === 0;
+
+  if(esViral){
+    const r = RETOS_VIRALES[Math.floor(Math.random()*RETOS_VIRALES.length)];
+    caja.className = "prenda-caja viral";
+    caja.innerHTML = `
+      <span class="badge-viral">📲 RETO VIRAL</span>
+      <span class="quien">${nombre}, os toca salir en redes 😏</span>
+      ${r}
+      <div class="hashtag-copy" onclick="copiarTag(this)" title="Tocar para copiar">
+        ${MARCA.hashtag} · ${MARCA.cuenta} 📋
+      </div>
+      <div class="btns-rrss">
+        <button class="btn-rrss ig" onclick="window.open(MARCA.urlIG,'_blank')">Abrir Instagram</button>
+        <button class="btn-rrss share" onclick="compartirJuego()">Retar a amigas</button>
+      </div>`;
+  } else if(Math.random() < .5){
+    const e = pick(ESPECIALES);
+    const nEsc = nombre.replace(/'/g,"\\'");
+    let extra = "";
+    if(e.id === "trab"){
+      extra = `<button class="btn-rrss share" style="width:100%;margin-top:14px" onclick="cronometro()">⏱️ 15 segundos... ¡YA!</button><div class="crono" id="crono"></div>`;
+    }
+    if(e.id === "trola"){
+      extra = `<div class="btns-rrss" id="voto-trola">
+        <button class="btn-rrss ig" onclick="resolverTrola('${nEsc}',false)">🕵️ ¡Pillada!</button>
+        <button class="btn-rrss share" onclick="resolverTrola('${nEsc}',true)">🎭 Nos ha engañado</button>
+      </div><div id="veredicto-trola"></div>`;
+    }
+    caja.className = "prenda-caja viral";
+    caja.innerHTML = `
+      <span class="badge-viral">${e.badge}</span>
+      <span class="quien">${nombre}, te ha tocado 😏</span>
+      ${e.texto()}${extra}`;
+  } else {
+    const p = PRENDAS[Math.floor(Math.random()*PRENDAS.length)];
+    caja.className = "prenda-caja";
+    caja.innerHTML = `<span class="quien">${nombre}, has sido pillada 😏</span>${p}`;
+  }
+  ir("p-prenda");
+}
+window.pillada = pillada;
+
+function copiarTag(el){
+  const texto = `${MARCA.hashtag} ${MARCA.cuenta}`;
+  navigator.clipboard?.writeText(texto).then(()=>{
+    el.textContent = "¡Copiado! Pegadlo en el story ✅";
+    setTimeout(()=>{ el.innerHTML = `${MARCA.hashtag} · ${MARCA.cuenta} 📋`; }, 2000);
+  });
+}
+window.copiarTag = copiarTag;
+
+let cronoInterval = null;
+function cronometro(){
+  const c = $("crono");
+  if(!c) return;
+  clearInterval(cronoInterval);
+  let t = 15;
+  c.className = "crono";
+  c.textContent = t;
+  cronoInterval = setInterval(()=>{
+    t--;
+    if(t > 0){ c.textContent = t; }
+    else {
+      clearInterval(cronoInterval);
+      c.className = "crono fin";
+      c.textContent = "⏰ ¡TIEMPO! ¿Lo ha clavado o sorbo? 🍷";
+      confeti(10);
+    }
+  }, 1000);
+}
+window.cronometro = cronometro;
+
+function resolverTrola(nombre, engano){
+  const votos = $("voto-trola"), v = $("veredicto-trola");
+  if(votos) votos.style.display = "none";
+  if(engano){
+    trolas[nombre] = (trolas[nombre]||0) + 1;
+    v.innerHTML = `<div class="veredicto">🎭 ¡${nombre} os ha vendido la trola! +1 punto de mentirosa. ¡Beben las demás! 🍷</div>`;
+    confeti(15);
+  } else {
+    v.innerHTML = `<div class="veredicto" style="color:var(--menta)">🕵️ ¡Cazada! ${nombre}, bonita historia... pero no cuela. ¡Bebes tú! 🍷</div>`;
+  }
+}
+window.resolverTrola = resolverTrola;
+
+function compartirJuego(){
+  const data = {
+    title: "¿Quién de nosotras...? 🍷",
+    text: `Os reto a jugar a "¿Quién de nosotras...?" — el juego que destroza amistades (de risa). ${MARCA.hashtag}`,
+    url: MARCA.urlWeb
+  };
+  if(navigator.share){ navigator.share(data).catch(()=>{}); }
+  else {
+    navigator.clipboard?.writeText(`${data.text} ${data.url}`);
+    alert("¡Enlace copiado! Pégalo donde quieras 📋");
+  }
+}
+window.compartirJuego = compartirJuego;
+
+$("empate").onclick = () => {
+  $("prenda").innerHTML = `<span class="quien">¿Todas inocentes? 🙄</span>Ya, claro. Como castigo por cobardes: TODAS bebéis un sorbo (o contáis una mini-confesión cada una).`;
+  ir("p-prenda");
+};
+
+$("btn-siguiente").onclick = () => { siguienteCarta(); ir("p-juego"); };
+
+/* --- ranking --- */
+$("btn-final").onclick = () => {
+  const orden = [...jugadoras].sort((a,b)=>puntos[b]-puntos[a]);
+  $("rank").innerHTML = orden.map((j,i)=>{
+    const medalla = i===0?"👑":i===1?"🥈":i===2?"🥉":"💄";
+    return `<li><span><span class="corona">${medalla}</span>${j}</span><span class="pts">${puntos[j]} ${puntos[j]===1?"pillada":"pilladas"}</span></li>`;
+  }).join("");
+  const pillada = orden[0];
+  const santa = orden[orden.length-1];
+  const mentirosas = [...jugadoras].sort((a,b)=>(trolas[b]||0)-(trolas[a]||0));
+  const mejorMentirosa = mentirosas[0];
+  const cajaMentirosa = (trolas[mejorMentirosa]||0) > 0 ? `
+    <div class="prenda-caja viral" style="margin-top:14px;border-color:var(--rosa)">
+      <span class="badge-viral" style="background:var(--rosa);color:#fff">🎭 MEJOR MENTIROSA</span>
+      <span class="quien">${mejorMentirosa}</span>
+      Ha colado ${trolas[mejorMentirosa]} ${trolas[mejorMentirosa]===1?"trola":"trolas"} sin despeinarse. Premio: título oficial de "Peligro Público" y el derecho a decir "os lo dije" una vez sin contexto. Desconfiad de ella para siempre. 😏
+    </div>` : "";
+  $("premios").innerHTML = `${cajaMentirosa}
+    <div class="prenda-caja viral" style="margin-top:14px">
+      <span class="badge-viral">⚖️ SENTENCIA FINAL</span>
+      <span class="quien">${pillada}, la más pillada</span>
+      ${pick(CASTIGOS_FINALES)}
+    </div>
+    <div class="prenda-caja" style="margin-top:14px;border-color:var(--menta)">
+      <span class="badge-viral" style="background:var(--menta)">😇 RECOMPENSA</span>
+      <span class="quien" style="color:var(--menta)">${santa}, la más santa (o la mejor mentirosa)</span>
+      ${pick(RECOMPENSAS)}
+    </div>`;
+  confeti(40);
+  ir("p-final");
+};
+$("btn-otra").onclick = () => ir("p-nivel");
+$("btn-ir-album").onclick = () => { pantallaAnterior = "p-final"; ir("p-album"); };
+
+$("btn-podio").onclick = () => {
+  const orden = [...jugadoras].sort((a,b)=>puntos[b]-puntos[a]);
+  const podio = orden.slice(0,3).map((j,i)=>`${["👑","🥈","🥉"][i]} ${j} (${puntos[j]})`).join(" · ");
+  const data = {
+    title: "Ranking oficial 🏆",
+    text: `Resultado de "¿Quién de nosotras...?" 🍷 ${podio} — ${MARCA.hashtag} ${MARCA.cuenta}`,
+    url: MARCA.urlWeb
+  };
+  if(navigator.share){ navigator.share(data).catch(()=>{}); }
+  else { navigator.clipboard?.writeText(`${data.text} ${data.url}`); alert("¡Podio copiado! Pégalo en tu story 📋"); }
+};
+
+const lm = $("link-marca");
+lm.textContent = MARCA.cuenta;
+lm.href = MARCA.urlIG;
+$("tag-album").innerHTML = `${MARCA.hashtag} · ${MARCA.cuenta} 📋`;
+
+/* --- álbum de la noche --- */
+let fotos = [];
+let pantallaAnterior = "p-juego";
+let collageURL = null;
+
+$("abrir-album").onclick = () => {
+  const act = document.querySelector(".pantalla.activa");
+  if(act && act.id !== "p-album") pantallaAnterior = act.id;
+  ir("p-album");
+};
+$("btn-volver-album").onclick = () => ir(pantallaAnterior);
+$("btn-add-fotos").onclick = () => $("input-fotos").click();
+
+$("input-fotos").addEventListener("change", e => {
+  [...e.target.files].slice(0, 9 - fotos.length).forEach(f => {
+    const r = new FileReader();
+    r.onload = () => { fotos.push(r.result); pintarFotos(); };
+    r.readAsDataURL(f);
+  });
+  e.target.value = "";
+});
+
+function pintarFotos(){
+  $("grid-fotos").innerHTML = fotos.map((src,i)=>
+    `<div class="foto"><img src="${src}" alt="Foto ${i+1} del álbum"><button aria-label="Quitar foto" onclick="quitarFoto(${i})">✕</button></div>`).join("");
+}
+function quitarFoto(i){ fotos.splice(i,1); pintarFotos(); }
+window.quitarFoto = quitarFoto;
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
+}
+
+$("btn-collage").onclick = async () => {
+  if(!fotos.length) return alert("¡Añadid al menos una foto, presumidas! 📷");
+  const W=1080, H=1350;
+  const cv = document.createElement("canvas"); cv.width=W; cv.height=H;
+  const ctx = cv.getContext("2d");
+
+  const g = ctx.createLinearGradient(0,0,W,H);
+  g.addColorStop(0,"#4a1257"); g.addColorStop(1,"#23092b");
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#ffd23f";
+  ctx.font = "64px 'Titan One', sans-serif";
+  ctx.fillText("¿Quién de nosotras...?", W/2, 95);
+  ctx.fillStyle = "#4de8c2";
+  ctx.font = "600 32px 'Outfit', sans-serif";
+  ctx.fillText("Álbum de la noche 📸 · " + new Date().toLocaleDateString("es-ES"), W/2, 148);
+
+  const imgs = await Promise.all(fotos.slice(0,9).map(src => new Promise(res => {
+    const im = new Image(); im.onload = () => res(im); im.src = src;
+  })));
+  const n = imgs.length;
+  const cols = n <= 2 ? 1 : n <= 4 ? 2 : 3;
+  const rows = Math.ceil(n/cols);
+  const areaY = 190, areaH = H - 190 - 175, gap = 14;
+  const cw = (W - 40 - gap*(cols-1)) / cols;
+  const ch = (areaH - gap*(rows-1)) / rows;
+
+  imgs.forEach((im,i)=>{
+    const x = 20 + (i%cols)*(cw+gap);
+    const y = areaY + Math.floor(i/cols)*(ch+gap);
+    const r = Math.max(cw/im.width, ch/im.height);
+    const sw = cw/r, sh = ch/r;
+    ctx.save();
+    roundRect(ctx,x,y,cw,ch,20); ctx.clip();
+    ctx.drawImage(im,(im.width-sw)/2,(im.height-sh)/2,sw,sh,x,y,cw,ch);
+    ctx.restore();
+    ctx.strokeStyle = "#ff3d8a"; ctx.lineWidth = 6;
+    roundRect(ctx,x,y,cw,ch,20); ctx.stroke();
+  });
+
+  ctx.fillStyle = "#ff3d8a";
+  ctx.font = "58px 'Titan One', sans-serif";
+  ctx.fillText(MARCA.hashtag, W/2, H-85);
+  ctx.fillStyle = "#f3e5ff";
+  ctx.font = "600 30px 'Outfit', sans-serif";
+  ctx.fillText(`${MARCA.cuenta} · ${MARCA.urlWeb.replace(/^https?:\/\//,"")}`, W/2, H-35);
+
+  collageURL = cv.toDataURL("image/jpeg", .9);
+  const prev = $("collage-prev");
+  prev.src = collageURL;
+  prev.style.display = "block";
+  $("btn-share-collage").style.display = "block";
+  confeti(20);
+};
+
+$("btn-share-collage").onclick = async () => {
+  if(!collageURL) return;
+  try{
+    const blob = await (await fetch(collageURL)).blob();
+    const file = new File([blob], "quien-de-nosotras-album.jpg", {type:"image/jpeg"});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({
+        files:[file],
+        text:`Nuestra noche de "¿Quién de nosotras...?" 🍷 ${MARCA.hashtag} ${MARCA.cuenta}`
+      });
+      return;
+    }
+  }catch(e){}
+  const a = document.createElement("a");
+  a.href = collageURL; a.download = "quien-de-nosotras-album.jpg"; a.click();
+};
+
+/* --- confeti --- */
+function confeti(n=18){
+  const em = ["🎉","💖","✨","🍷","💅","🎊"];
+  for(let i=0;i<n;i++){
+    const s = document.createElement("span");
+    s.className = "confeti";
+    s.textContent = em[Math.floor(Math.random()*em.length)];
+    s.style.left = Math.random()*100 + "vw";
+    s.style.animationDuration = (1.6 + Math.random()*1.8) + "s";
+    s.style.fontSize = (1 + Math.random()*1.4) + "rem";
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(), 4000);
+  }
+}
+</script>
+</body>
+</html>
